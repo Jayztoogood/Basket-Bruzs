@@ -1,1 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Basket Blitz — Arcade Basketball</title>
+  <meta name="description" content="Basket Blitz — fast, goofy, physics-heavy arcade basketball.">
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: Inter, system-ui, Arial, sans-serif;
+      background: #090b18;
+      color: white;
+    }
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background:
+        radial-gradient(circle at 50% -10%, #283263 0, #090b18 58%);
+    }
+    .page {
+      width: min(1050px, 100%);
+      text-align: center;
+    }
+    .logo {
+      font-size: clamp(42px, 8vw, 80px);
+      font-weight: 1000;
+      letter-spacing: -5px;
+      margin-bottom: 8px;
+      text-shadow: 0 10px 35px #000;
+    }
+    .logo span { color: #ff8a00; }
+    .tagline {
+      color: #aeb7d5;
+      margin: 0 auto 28px;
+      font-size: 17px;
+    }
+    .card {
+      background: #0d1123ee;
+      border: 1px solid #ffffff18;
+      border-radius: 26px;
+      padding: 34px;
+      box-shadow: 0 24px 80px #0009;
+    }
+    .play {
+      display: inline-block;
+      padding: 18px 42px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #ff9a1f, #ff5e2f);
+      color: white;
+      text-decoration: none;
+      font-size: 21px;
+      font-weight: 1000;
+      transition: .18s transform, .18s filter;
+    }
+    .play:hover {
+      transform: translateY(-3px) scale(1.02);
+      filter: brightness(1.1);
+    }
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 26px;
+    }
+    .feature {
+      background: #ffffff08;
+      border: 1px solid #ffffff12;
+      border-radius: 17px;
+      padding: 18px;
+    }
+    .feature b {
+      display: block;
+      margin-bottom: 6px;
+    }
+    .feature span {
+      color: #aeb7d5;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .footer {
+      margin-top: 20px;
+      color: #697394;
+      font-size: 12px;
+    }
+    @media (max-width: 700px) {
+      body { padding: 10px; }
+      .card { padding: 22px; }
+      .features { grid-template-columns: 1fr; }
+      .logo { letter-spacing: -3px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="logo">BASKET<span>BLITZ</span></div>
+    <p class="tagline">Fast, goofy, physics-heavy arcade basketball.</p>
 
+    <section class="card">
+      <a class="play" href="game.html">🏀 PLAY BASKET BLITZ</a>
+
+      <div class="features">
+        <div class="feature">
+          <b>🎲 Random Rounds</b>
+          <span>Every round can feel different with unpredictable physics.</span>
+        </div>
+        <div class="feature">
+          <b>🌐 Play With Friends</b>
+          <span>Use online rooms to play with friends on other computers.</span>
+        </div>
+        <div class="feature">
+          <b>🏆 First To 5</b>
+          <span>Score five points before your opponent to win the match.</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer">Basket Blitz • Arcade Basketball</div>
+  </main>
+</body>
+</html>
