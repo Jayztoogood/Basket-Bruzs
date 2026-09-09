@@ -1,1 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Basket Blitz — Arcade Basketball</title>
+<style>
+:root{--bg:#090b18;--panel:#11162a;--panel2:#171d36;--text:#fff;--muted:#aeb7d5;--accent:#ff8a00;--accent2:#7c5cff;--good:#35e38a;--danger:#ff5577}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,system-ui,Arial,sans-serif;background:radial-gradient(circle at 50% -20%,#283263 0,#090b18 55%);color:var(--text)}
+body{display:flex;justify-content:center;padding:18px;overflow-x:hidden}
+#app{width:min(1200px,100%)}header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.logo{font-weight:1000;font-size:clamp(24px,4vw,40px);letter-spacing:-2px}.logo span{color:var(--accent)}
+.badge{padding:8px 12px;border-radius:999px;background:#ffffff12;border:1px solid #ffffff18;color:var(--muted);font-size:12px}
+.screen{background:#0d1123dd;border:1px solid #ffffff15;border-radius:24px;box-shadow:0 24px 80px #0008;overflow:hidden}
+#menu{padding:34px}.hero{text-align:center;padding:24px 10px 12px}.hero h1{font-size:clamp(42px,8vw,82px);margin:0;letter-spacing:-5px;text-shadow:0 8px 30px #000}.hero p{color:var(--muted);font-size:16px}
+.modes{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:24px 0}
+button{font:inherit;color:white;border:0;cursor:pointer;transition:.18s transform,.18s filter,.18s background}
+.btn{padding:16px 18px;border-radius:16px;background:linear-gradient(135deg,#272f55,#171c35);border:1px solid #ffffff16;font-weight:900}.btn:hover{transform:translateY(-2px);filter:brightness(1.12)}.btn.primary{background:linear-gradient(135deg,#ff9a1f,#ff5e2f)}.btn.purple{background:linear-gradient(135deg,#8a65ff,#5541d9)}
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.feature{background:#ffffff07;border:1px solid #ffffff0e;border-radius:16px;padding:14px}.feature b{display:block;margin-bottom:5px}.feature span{font-size:12px;color:var(--muted)}
+.hidden{display:none!important}
+#gameWrap{position:relative;background:#0b0d18}
+#hud{height:74px;background:#11162a;display:flex;align-items:center;justify-content:center;gap:22px;border-bottom:1px solid #ffffff12;position:relative;z-index:5}
+.score{font-size:34px;font-weight:1000;min-width:55px;text-align:center}.team{font-size:11px;color:var(--muted);font-weight:900;text-transform:uppercase}.clock{font-size:13px;color:#fff;background:#ffffff0c;padding:7px 10px;border-radius:9px}
+.hudBtn{position:absolute;right:12px;top:12px;padding:9px 12px;border-radius:10px;background:#ffffff0b;border:1px solid #ffffff14}
+#canvas{display:block;width:100%;height:auto;background:#8fc4ff}
+#touch{position:absolute;left:0;right:0;bottom:12px;display:flex;justify-content:space-between;padding:0 16px;pointer-events:none}.touchSide{display:flex;gap:10px;pointer-events:auto}.touch{width:74px;height:58px;border-radius:18px;background:#111c;backdrop-filter:blur(8px);border:1px solid #fff2;font-weight:1000}.touch:active{transform:scale(.95)}
+#status{position:absolute;top:84px;left:50%;transform:translateX(-50%);padding:9px 15px;border-radius:999px;background:#090b18dd;border:1px solid #fff2;font-weight:900;font-size:12px;z-index:6;white-space:nowrap}
+#onlinePanel{padding:24px;max-width:760px;margin:auto}.roomBox{display:flex;gap:10px}.roomBox input{flex:1;min-width:0;background:#090d1c;color:#fff;border:1px solid #ffffff20;border-radius:14px;padding:14px;font-size:18px;font-weight:800}.onlineCards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}.onlineCard{background:#ffffff07;border:1px solid #ffffff12;padding:18px;border-radius:18px}.onlineCard h3{margin-top:0}.small{font-size:12px;color:var(--muted);line-height:1.5}
+#result{position:absolute;inset:74px 0 0;background:#070916d9;backdrop-filter:blur(10px);z-index:10;display:flex;align-items:center;justify-content:center}.resultCard{width:min(500px,90%);background:#151b34;border:1px solid #fff2;border-radius:25px;padding:30px;text-align:center;box-shadow:0 30px 80px #0009}.resultCard h2{font-size:46px;margin:5px 0}.resultCard p{color:var(--muted)}
+@media(max-width:800px){.modes{grid-template-columns:1fr 1fr}.features{grid-template-columns:1fr}.hudBtn{display:none}}
+@media(max-width:520px){body{padding:8px}.screen{border-radius:18px}#menu{padding:20px}.modes{grid-template-columns:1fr}.hero h1{letter-spacing:-3px}.touch{width:65px}}
 
+/* Extra features - keeps the original court/game styling intact */
+.featureActions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px}.miniBtn{padding:10px 14px;border-radius:12px;background:#ffffff0b;border:1px solid #ffffff14;color:#fff;font-weight:800;cursor:pointer}.miniBtn:hover{filter:brightness(1.15);transform:translateY(-1px)}
+.modal{position:fixed;inset:0;background:#050711cc;backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}.modal.hidden{display:none}.modalCard{width:min(560px,100%);background:#151b34;border:1px solid #fff2;border-radius:22px;padding:24px;box-shadow:0 30px 80px #000b}.modalCard h2{margin-top:0}.statGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.statBox{background:#ffffff08;border:1px solid #ffffff12;border-radius:14px;padding:14px}.statBox b{display:block;font-size:24px}.settingRow{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:12px 0;border-bottom:1px solid #ffffff10}.skinRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.skin{width:42px;height:42px;border-radius:10px;border:2px solid #ffffff33;cursor:pointer}.skin.active{outline:3px solid #fff}.achievement{padding:10px;border-radius:12px;background:#ffffff07;margin:7px 0}.achievement.locked{opacity:.45}
+#streakHud{position:absolute;left:12px;top:12px;padding:7px 10px;border-radius:10px;background:#ffffff0b;border:1px solid #ffffff14;font-size:11px;font-weight:900;z-index:6}.streakFill{display:inline-block;width:70px;height:7px;background:#ffffff15;border-radius:99px;overflow:hidden;vertical-align:middle;margin-left:5px}.streakFill i{display:block;height:100%;width:0;background:var(--accent);transition:width .15s}
+</style>
+</head>
+<body>
+<div id="app">
+<header><div class="logo">BASKET<span>BLITZ</span></div><div class="badge">Original arcade basketball</div></header>
+
+<section id="menu" class="screen">
+  <div class="hero">
+    <h1>Basket Blitz</h1>
+    <p>Fast, goofy, physics-heavy basketball. First to 5 wins.</p>
+  </div>
+  <div class="modes">
+    <button class="btn primary" data-mode="cpu">🤖 1v1 vs CPU</button>
+    <button class="btn" data-mode="local">🎮 Local 2 Player</button>
+    <button class="btn purple" data-mode="online1">🌐 Online 1v1</button>
+    <button class="btn purple" data-mode="online2">👥 Online 2v2</button>
+  </div>
+  <div class="features">
+    <div class="feature"><b>🎲 Random Rounds</b><span>Ball speed, gravity, player size and court events change between rounds.</span></div>
+    <div class="feature"><b>🔥 Streak Meter</b><span>Score multiple times in a row to charge a temporary speed boost.</span></div>
+    <div class="feature"><b>🌐 Room Codes</b><span>Create a room and share the code with friends on another computer.</span></div>
+  </div>
+  <div class="featureActions"><button id="statsBtn" class="miniBtn">📊 Stats & Achievements</button><button id="settingsBtn" class="miniBtn">⚙️ Settings</button></div>
+</section>
+
+<section id="onlinePanel" class="screen hidden">
+  <div style="padding:24px">
+    <h2 id="onlineTitle">Online Match</h2>
+    <p class="small">Online mode uses WebRTC data channels. One player hosts and shares the room code. No account is required.</p>
+    <div class="onlineCards">
+      <div class="onlineCard"><h3>Host</h3><p class="small">Create a room, then send the generated code to your friend.</p><button id="hostBtn" class="btn primary">Create Room</button></div>
+      <div class="onlineCard"><h3>Join</h3><p class="small">Enter the host's room code below.</p><div class="roomBox"><input id="joinCode" maxlength="8" placeholder="ROOM CODE"><button id="joinBtn" class="btn purple">Join</button></div></div>
+    </div>
+    <p id="onlineStatus" class="small" style="margin-top:18px"></p>
+    <button id="backOnline" class="btn" style="margin-top:10px">← Back</button>
+  </div>
+</section>
+
+<section id="game" class="screen hidden">
+ <div id="gameWrap">
+  <div id="hud">
+    <div><div class="team">Blue</div><div id="blueScore" class="score">0</div></div>
+    <div class="clock" id="roundInfo">ROUND 1 · 60s</div>
+    <div><div class="team">Orange</div><div id="orangeScore" class="score">0</div></div>
+    <button id="pauseBtn" class="hudBtn">Ⅱ Pause</button>
+  </div>
+  <div id="status">Loading court…</div>
+  <canvas id="canvas" width="1000" height="600"></canvas>
+  <div id="touch">
+   <div class="touchSide"><button class="touch" data-key="a">◀</button><button class="touch" data-key="w">JUMP</button><button class="touch" data-key="d">▶</button></div>
+   <div class="touchSide"><button class="touch" data-key="arrowleft">◀</button><button class="touch" data-key="arrowup">JUMP</button><button class="touch" data-key="arrowright">▶</button></div>
+  </div>
+  <div id="result" class="hidden"><div class="resultCard"><div id="resultEmoji">🏆</div><h2 id="resultTitle">Blue Wins!</h2><p id="resultText">Great game.</p><button id="rematch" class="btn primary">Rematch</button> <button id="menuBtn" class="btn">Menu</button></div></div>
+ </div>
+</section>
+</div>
+
+<script>
+/* Basket Blitz is an original implementation. It is not the source code of Basketball Random. */
+
+const canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d');
+const menu=document.getElementById('menu'),onlinePanel=document.getElementById('onlinePanel'),gameEl=document.getElementById('game');
+const blueScoreEl=document.getElementById('blueScore'),orangeScoreEl=document.getElementById('orangeScore'),roundInfo=document.getElementById('roundInfo'),statusEl=document.getElementById('status');
+const W=1000,H=600,ground=530;
+let mode='cpu',running=false,paused=false,last=0,score=[0,0],round=1,time=60,roundTimer=0,keys={},roundSeed=0;
+let players=[],ball,hoops,particles=[],online=null,onlineRole=null,localSlot=0,remoteInputs={},hostStateTick=0,onlineConnections={},nextSlot=1;
+let streak=0, bestStreak=Number(localStorage.getItem('bb_bestStreak')||0), stats=JSON.parse(localStorage.getItem('bb_stats')||'{"wins":0,"losses":0,"games":0}');
+let settings=JSON.parse(localStorage.getItem('bb_settings')||'{"sound":true,"particles":true,"shake":true,"skin":"#4f8cff"}');
+
+function rnd(a,b){return a+Math.random()*(b-a)}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function resizeCanvas(){/* CSS handles scaling */}
+window.addEventListener('resize',resizeCanvas);
+
+function resetRound(){
+ roundSeed=Math.random();
+ const gravity=720+rnd(-90,130);
+ hoops={left:{x:90,y:270,w:18,h:160},right:{x:892,y:270,w:18,h:160}};
+ players=[
+  {team:0,x:210,y:450,vx:0,vy:0,r:34,flip:1,boost:0,stun:0,color:'#4f8cff'},
+  {team:1,x:790,y:450,vx:0,vy:0,r:34,flip:-1,boost:0,stun:0,color:'#ff7a35'}
+ ];
+ ball={x:500,y:220,vx:rnd(-90,90),vy:rnd(-80,30),r:17,gravity,spin:0,held:-1};
+ particles=[];time=60;roundTimer=0;
+ document.getElementById('result').classList.add('hidden');
+ statusEl.textContent=`ROUND ${round} · RANDOM PHYSICS`;
+}
+function startGame(m){
+ mode=m;menu.classList.add('hidden');onlinePanel.classList.add('hidden');gameEl.classList.remove('hidden');
+ score=[0,0];round=1;paused=false;running=true;resetRound();
+}
+function showOnline(m){
+ mode=m;menu.classList.add('hidden');onlinePanel.classList.remove('hidden');
+ document.getElementById('onlineTitle').textContent=m==='online2'?'Online 2v2':'Online 1v1';
+ document.getElementById('onlineStatus').textContent='Choose Host or Join.';
+}
+document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>b.dataset.mode.startsWith('online')?showOnline(b.dataset.mode):startGame(b.dataset.mode));
+document.getElementById('backOnline').onclick=()=>{onlinePanel.classList.add('hidden');menu.classList.remove('hidden')};
+document.getElementById('pauseBtn').onclick=()=>paused=!paused;
+document.getElementById('menuBtn').onclick=()=>{running=false;gameEl.classList.add('hidden');menu.classList.remove('hidden')};
+document.getElementById('rematch').onclick=()=>{score=[0,0];round=1;resetRound();running=true};
+
+window.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(['arrowup','arrowleft','arrowright',' '].includes(e.key.toLowerCase()))e.preventDefault()});
+window.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+document.querySelectorAll('.touch').forEach(b=>{
+ const k=b.dataset.key;
+ b.addEventListener('pointerdown',e=>{e.preventDefault();keys[k]=true});
+ ['pointerup','pointercancel','pointerleave'].forEach(ev=>b.addEventListener(ev,e=>{e.preventDefault();keys[k]=false}));
+});
+
+function inputFor(i){
+ if(i===0)return {left:keys.a,right:keys.d,jump:keys.w};
+ return {left:keys.arrowleft||keys['ArrowLeft'],right:keys.arrowright||keys['ArrowRight'],jump:keys.arrowup||keys['ArrowUp']};
+}
+function cpuInput(){
+ const p=players[1], target=ball.x;
+ return {left:target<p.x-12,right:target>p.x+12,jump:ball.y<330 && Math.random()<.035};
+}
+function movePlayer(p,inp,dt){
+ if(p.stun>0){p.stun-=dt;return}
+ const accel=1250, max=300+(p.boost>0?100:0);
+ if(inp.left)p.vx-=accel*dt;
+ if(inp.right)p.vx+=accel*dt;
+ p.vx*=Math.pow(.0008,dt);p.vx=clamp(p.vx,-max,max);
+ if(inp.jump && p.y>=ground-p.r-1){p.vy=-500-rnd(0,90);p.flip=p.vx<0?-1:1}
+ p.vy+=ball.gravity*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;
+ p.x=clamp(p.x,55,945);if(p.y>ground-p.r){p.y=ground-p.r;p.vy=0}
+ if(p.boost>0)p.boost-=dt;
+}
+function collidePlayer(p){
+ const dx=ball.x-p.x,dy=ball.y-p.y,d=Math.hypot(dx,dy),min=ball.r+p.r;
+ if(d<min){
+  const nx=dx/(d||1),ny=dy/(d||1),rel=(ball.vx-p.vx)*nx+(ball.vy-p.vy)*ny;
+  ball.x=p.x+nx*min;ball.y=p.y+ny*min;
+  if(rel<0){ball.vx-=1.7*rel*nx;ball.vy-=1.7*rel*ny}
+  ball.vx+=p.vx*.25;ball.vy+=p.vy*.12;
+  if(Math.random()<.08){p.boost=1.2;burst(ball.x,ball.y,'#fff')}
+ }
+}
+function collideHoop(h,isLeft){
+ const rimX=isLeft?h.x:h.x, top=h.y;
+ if(ball.x>h.x-70 && ball.x<h.x+70 && ball.y>top-8 && ball.y<top+12 && ball.vy>0){
+  ball.y=top-8;ball.vy=-Math.abs(ball.vy)*.72;ball.vx*=.92;
+ }
+}
+function scorePoint(team){
+ score[team]++;blueScoreEl.textContent=score[0];orangeScoreEl.textContent=score[1];
+ for(let i=0;i<35;i++)burst(team===0?900:100,250,team===0?'#4f8cff':'#ff7a35');
+ if(score[team]>=5){endGame(team);return}
+ round++;resetRound();
+}
+function endGame(team){
+ running=false;
+ document.getElementById('resultTitle').textContent=team===0?'BLUE WINS!':'ORANGE WINS!';
+ document.getElementById('resultText').textContent=`Final score ${score[0]} - ${score[1]}. Round ${round} was chaos.`;
+ document.getElementById('resultEmoji').textContent=team===0?'🏆':'🔥';
+ document.getElementById('result').classList.remove('hidden');
+}
+function burst(x,y,c){if(!settings.particles)return;particles.push({x,y,vx:rnd(-180,180),vy:rnd(-280,-60),life:rnd(.4,.9),c})}
+function updateParticles(dt){particles.forEach(q=>{q.life-=dt;q.x+=q.vx*dt;q.y+=q.vy*dt;q.vy+=500*dt});particles=particles.filter(q=>q.life>0)}
+function update(dt){
+ if(!running||paused)return;
+ roundTimer+=dt;time=Math.max(0,60-roundTimer);roundInfo.textContent=`ROUND ${round} · ${Math.ceil(time)}s`;
+ let in0=inputFor(0),in1=mode==='cpu'?cpuInput():inputFor(1);
+ if(mode==='online1'||mode==='online2'){
+   if(onlineRole==='host'){in1=remoteInputs[1]||{}}
+   else if(onlineRole==='guest'){in0=remoteInputs[0]||{}}
+ }
+ movePlayer(players[0],in0,dt);movePlayer(players[1],in1,dt);
+ collidePlayer(players[0]);collidePlayer(players[1]);
+ ball.vy+=ball.gravity*dt;ball.x+=ball.vx*dt;ball.y+=ball.vy*dt;ball.spin+=ball.vx*dt/ball.r;
+ ball.vx*=Math.pow(.999,dt*60);
+ if(ball.y>ground-ball.r){ball.y=ground-ball.r;ball.vy=-Math.abs(ball.vy)*.72;ball.vx*=.88}
+ if(ball.x<ball.r){ball.x=ball.r;ball.vx=Math.abs(ball.vx)*.82}
+ if(ball.x>W-ball.r){ball.x=W-ball.r;ball.vx=-Math.abs(ball.vx)*.82}
+ // score detection
+ if(ball.x<38 && ball.y>hoops.left.y-35 && ball.y<hoops.left.y+45){scorePoint(1);return}
+ if(ball.x>962 && ball.y>hoops.right.y-35 && ball.y<hoops.right.y+45){scorePoint(0);return}
+ collideHoop(hoops.left,true);collideHoop(hoops.right,false);
+ if(time<=0){scorePoint(score[0]>=score[1]?1:0);return}
+ updateParticles(dt);
+ if(mode.startsWith('online')&&onlineRole==='host')sendState();
+}
+function draw(){
+ ctx.clearRect(0,0,W,H);
+ // sky
+ const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#87c9ff');g.addColorStop(1,'#d8f1ff');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+ // crowd
+ for(let i=0;i<30;i++){ctx.fillStyle=i%2?'#26345a':'#364777';ctx.fillRect(i*36,120+(i%3)*7,25,70)}
+ // court
+ ctx.fillStyle='#d78b45';ctx.fillRect(0,390,W,140);ctx.fillStyle='#f4b76d';ctx.fillRect(0,400,W,130);
+ ctx.strokeStyle='#fff';ctx.lineWidth=5;ctx.strokeRect(20,410,960,110);ctx.beginPath();ctx.moveTo(500,410);ctx.lineTo(500,520);ctx.stroke();
+ ctx.beginPath();ctx.arc(500,465,45,0,Math.PI*2);ctx.stroke();
+ // hoops
+ drawHoop(hoops.left,true);drawHoop(hoops.right,false);
+ players.forEach(drawPlayer);drawBall();particles.forEach(q=>{ctx.globalAlpha=Math.max(0,q.life);ctx.fillStyle=q.c;ctx.fillRect(q.x,q.y,6,6)});ctx.globalAlpha=1;
+}
+function drawHoop(h,left){
+ const x=left?h.x:W-h.x;ctx.strokeStyle='#555';ctx.lineWidth=12;ctx.beginPath();ctx.moveTo(x,270);ctx.lineTo(x,410);ctx.stroke();
+ ctx.fillStyle='#e9f2ff';ctx.fillRect(left?x:x-65,260,left?70:65,55);
+ ctx.strokeStyle='#ff5a22';ctx.lineWidth=7;ctx.beginPath();ctx.arc(left?x+8:x-8,320,30,0,Math.PI*2);ctx.stroke();
+ ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(left?x-20:x+20,325);ctx.lineTo(left?x-10:x+10,370);ctx.lineTo(left?x+28:x-28,325);ctx.stroke();
+}
+function drawPlayer(p){
+ ctx.save();ctx.translate(p.x,p.y);ctx.scale(p.flip,1);
+ ctx.fillStyle='#111b3a';ctx.beginPath();ctx.arc(0,-48,25,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle=p.color;ctx.fillRect(-27,-25,54,58);ctx.fillStyle='#15182b';ctx.fillRect(-22,33,18,35);ctx.fillRect(4,33,18,35);
+ // arms
+ ctx.strokeStyle=p.color;ctx.lineWidth=15;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(-20,-8);ctx.lineTo(-45,-28);ctx.moveTo(20,-8);ctx.lineTo(45,-28);ctx.stroke();
+ if(p.boost>0){ctx.strokeStyle='#fff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,46,0,Math.PI*2);ctx.stroke()}
+ ctx.restore();
+}
+function drawBall(){
+ ctx.save();ctx.translate(ball.x,ball.y);ctx.rotate(ball.spin);
+ ctx.fillStyle='#f47b20';ctx.beginPath();ctx.arc(0,0,ball.r,0,Math.PI*2);ctx.fill();
+ ctx.strokeStyle='#3b1c0b';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,ball.r*.7,-1.2,1.2);ctx.stroke();ctx.beginPath();ctx.moveTo(-ball.r,0);ctx.quadraticCurveTo(0,7,ball.r,0);ctx.stroke();ctx.restore();
+}
+function loop(t){const dt=Math.min(.033,(t-last)/1000||0);last=t;update(dt);draw();requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+
+// --- Lightweight WebRTC room system + 4-player 2v2 lobby ---
+let peer=null,conn=null;
+function randomCode(){return Math.random().toString(36).slice(2,8).toUpperCase()}
+function loadPeer(cb){
+ if(window.Peer)return cb();
+ const s=document.createElement('script');s.src='https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';s.onload=cb;s.onerror=()=>setOnline('Could not load the online networking library.');document.head.appendChild(s)
+}
+function setOnline(t){document.getElementById('onlineStatus').textContent=t}
+function createHost(){
+ loadPeer(()=>{
+  const id='bb-'+randomCode();peer=new Peer(id,{debug:0});onlineRole='host';localSlot=0;nextSlot=1;onlineConnections={};
+  peer.on('open',()=>setOnline(`ROOM CODE: ${id.slice(3)} — share it. Players: 1/${mode==='online2'?4:2}`));
+  peer.on('connection',c=>{
+   const max=mode==='online2'?3:1;if(Object.keys(onlineConnections).length>=max){c.on('open',()=>c.send({type:'full'}));c.close();return}
+   const slot=nextSlot++;onlineConnections[slot]=c;setupHostConnection(c,slot);
+   updateLobbyStatus();
+  });
+  peer.on('error',e=>setOnline('Network error: '+e.type));
+ })
+}
+function updateLobbyStatus(){const count=1+Object.keys(onlineConnections).length,total=mode==='online2'?4:2;setOnline(`ROOM CODE: ${peer&&peer.id?peer.id.slice(3):'??????'} — Players: ${count}/${total}${count>=total?' — Starting…':' — waiting for players…'}`);if(count>=total)startOnlineMatch()}
+function startOnlineMatch(){if(!running){startGame(mode);setTimeout(()=>broadcast({type:'start'}),100)}}
+function joinHost(){
+ const code=document.getElementById('joinCode').value.trim().toUpperCase();if(code.length<4)return setOnline('Enter the room code.');
+ loadPeer(()=>{peer=new Peer(undefined,{debug:0});onlineRole='guest';
+  peer.on('open',()=>{conn=peer.connect('bb-'+code,{reliable:true});conn.on('open',()=>setOnline('Connected! Waiting for the host…'));setupGuestConnection(conn);});
+  peer.on('error',e=>setOnline('Network error: '+e.type));
+ })
+}
+function setupHostConnection(c,slot){
+ c.on('open',()=>{c.send({type:'welcome',slot,mode});setOnline(`Player joined. Players: ${1+Object.keys(onlineConnections).length}/${mode==='online2'?4:2}`);if(mode==='online1')startOnlineMatch()});
+ c.on('data',d=>{if(d.type==='input')remoteInputs[slot]=d.input});
+ c.on('close',()=>{delete onlineConnections[slot];delete remoteInputs[slot];setOnline(`Player disconnected. Players: ${1+Object.keys(onlineConnections).length}/${mode==='online2'?4:2}`)});
+}
+function setupGuestConnection(c){
+ c.on('data',d=>{
+  if(d.type==='welcome'){localSlot=d.slot;mode=d.mode;setOnline(`You are Player ${localSlot+1}. Waiting for match…`)}
+  if(d.type==='start'){startGame(mode)}
+  if(d.type==='state')applyState(d.s);
+  if(d.type==='full')setOnline('Room is full. Try another room.');
+ });
+ c.on('close',()=>setOnline('Connection closed.'))
+}
+function broadcast(msg){Object.values(onlineConnections).forEach(c=>{if(c.open)c.send(msg)})}
+function sendState(){
+ if(onlineRole!=='host')return;
+ const s={score,round,time,players:players.map(p=>({x:p.x,y:p.y,vx:p.vx,vy:p.vy,boost:p.boost,flip:p.flip})),ball:{x:ball.x,y:ball.y,vx:ball.vx,vy:ball.vy,spin:ball.spin}};
+ broadcast({type:'state',s});
+}
+function sendInput(){
+ if(onlineRole!=='guest'||!conn||!conn.open)return;
+ conn.send({type:'input',input:inputFor(localSlot)});
+}
+function applyState(s){
+ score=s.score;round=s.round;time=s.time;blueScoreEl.textContent=score[0];orangeScoreEl.textContent=score[1];
+ if(!players.length||players.length!==s.players.length){resetRound()}
+ s.players.forEach((q,i)=>{if(players[i])Object.assign(players[i],q)});Object.assign(ball,s.ball);updateStreakHud();
+}
+// Stats/settings/achievement helpers
+function updateStreakHud(){const t=document.getElementById('streakText'),f=document.getElementById('streakFill');if(t)t.textContent=streak;if(f)f.style.width=Math.min(100,streak*20)+'%'}
+const achievementDefs=[['first','First Win','Win your first match'],['streak3','On Fire','Score 3 times in a row'],['best5','Perfect Streak','Reach a 5-score streak'],['games10','Veteran','Play 10 matches']];
+function unlocked(id){return localStorage.getItem('bb_ach_'+id)==='1'}
+function unlockAchievements(team){if(team===0)localStorage.setItem('bb_ach_first','1');if(streak>=3)localStorage.setItem('bb_ach_streak3','1');if(streak>=5)localStorage.setItem('bb_ach_best5','1');if(stats.games>=10)localStorage.setItem('bb_ach_games10','1')}
+function renderStats(){document.getElementById('statWins').textContent=stats.wins;document.getElementById('statLosses').textContent=stats.losses;document.getElementById('statGames').textContent=stats.games;document.getElementById('statBest').textContent=bestStreak;document.getElementById('achievements').innerHTML=achievementDefs.map(a=>`<div class="achievement ${unlocked(a[0])?'':'locked'}">${unlocked(a[0])?'🏆':'🔒'} <b>${a[1]}</b> — ${a[2]}</div>`).join('')}
+function refreshSettings(){document.getElementById('soundToggle').textContent=settings.sound?'ON':'OFF';document.getElementById('particlesToggle').textContent=settings.particles?'ON':'OFF';document.getElementById('shakeToggle').textContent=settings.shake?'ON':'OFF';document.querySelectorAll('.skin').forEach(x=>x.classList.toggle('active',x.dataset.skin===settings.skin))}
+function saveSettings(){localStorage.setItem('bb_settings',JSON.stringify(settings));refreshSettings()}
+document.getElementById('statsBtn').onclick=()=>{renderStats();document.getElementById('statsModal').classList.remove('hidden')};document.getElementById('closeStats').onclick=()=>document.getElementById('statsModal').classList.add('hidden');
+document.getElementById('settingsBtn').onclick=()=>{refreshSettings();document.getElementById('settingsModal').classList.remove('hidden')};document.getElementById('closeSettings').onclick=()=>document.getElementById('settingsModal').classList.add('hidden');
+document.getElementById('soundToggle').onclick=()=>{settings.sound=!settings.sound;saveSettings()};document.getElementById('particlesToggle').onclick=()=>{settings.particles=!settings.particles;saveSettings()};document.getElementById('shakeToggle').onclick=()=>{settings.shake=!settings.shake;saveSettings()};document.querySelectorAll('.skin').forEach(x=>x.onclick=()=>{settings.skin=x.dataset.skin;saveSettings()});
+document.getElementById('hostBtn').onclick=createHost;document.getElementById('joinBtn').onclick=joinHost;
+setInterval(sendInput,50);
+</script>
+</body>
+</html>
